@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 import {
   StyleSheet,
   Text,
@@ -8,61 +8,71 @@ import {
   Dimensions,
   Picker,
   Platform,
-} from "react-native";
+} from 'react-native';
 
-const screen = Dimensions.get("window");
+const screen = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#07121B",
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: '#07121B',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   button: {
     borderWidth: 10,
-    borderColor: "#89AAFF",
+    borderColor: '#89AAFF',
     width: screen.width / 2,
     height: screen.width / 2,
     borderRadius: screen.width / 2,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     marginTop: 30,
   },
   buttonStop: {
-    borderColor: "#FF851B",
+    borderColor: '#FF851B',
   },
   buttonText: {
     fontSize: 45,
-    color: "#89AAFF",
+    color: '#89AAFF',
   },
   buttonTextStop: {
-    color: "#FF851B",
+    color: '#FF851B',
   },
   timerText: {
+    color: '#fff',
     fontSize: 90,
-    color: "#fff",
   },
   picker: {
     width: 50,
     ...Platform.select({
       android: {
-        color: "#fff",
-        backgroundColor: "#07121B",
+        color: '#fff',
+        backgroundColor: '#07121B',
+        marginLeft: 10,
       },
     }),
   },
-  itemPicker: {
-    color: "#fff",
+  pickerItem: {
+    color: '#fff',
     fontSize: 20,
   },
   pickerContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 });
 
-const createArray = (length) => {
+
+const formatNumber = number => `0${number}`.slice(-2);
+
+const getRemaining = time => {
+  const minutes = Math.floor(time / 60);
+  const seconds = time - minutes * 60;
+  return { minutes: formatNumber(minutes), seconds: formatNumber(seconds) };
+};
+
+const createArray = length => {
   const arr = [];
   let i = 0;
   while (i < length) {
@@ -72,28 +82,22 @@ const createArray = (length) => {
 
   return arr;
 };
+
 const AVAILABLE_MINUTES = createArray(10);
 const AVAILABLE_SECONDS = createArray(60);
 
-const formatNumber = (number) => `0${number}`.slice(-2);
-
-const getRemaining = (time) => {
-  const minutes = Math.floor(time / 60);
-  const seconds = time - minutes * 60;
-  return { minutes: formatNumber(minutes), seconds: formatNumber(seconds) };
-};
 export default class App extends React.Component {
   state = {
-    remaininSeconds: 5,
+    remainingSeconds: 5,
     isRunning: false,
-    selectedMinutes: "0",
-    selectedSeconds: "0"
+    selectedMinutes: '0',
+    selectedSeconds: '5',
   };
 
   interval = null;
 
   componentDidUpdate(prevProp, prevState) {
-    if (this.state.remaininSeconds === 0 && prevState.remaininSeconds !== 0) {
+    if (this.state.remainingSeconds === 0 && prevState.remainingSeconds !== 0) {
       this.stop();
     }
   }
@@ -105,14 +109,16 @@ export default class App extends React.Component {
   }
 
   start = () => {
-    this.setState((state) => ({
-      remaininSeconds: parseInt(state.selectedMinutes, 10) * 60 + parseInt(state.selectedSeconds, 10),
+    this.setState(state => ({
+      remainingSeconds:
+        parseInt(state.selectedMinutes, 10) * 60 +
+        parseInt(state.selectedSeconds, 10),
       isRunning: true,
     }));
 
     this.interval = setInterval(() => {
-      this.setState((state) => ({
-        remaininSeconds: state.remaininSeconds - 1,
+      this.setState(state => ({
+        remainingSeconds: state.remainingSeconds - 1,
       }));
     }, 1000);
   };
@@ -120,40 +126,48 @@ export default class App extends React.Component {
   stop = () => {
     clearInterval(this.interval);
     this.interval = null;
-    this.setState({ remaininSeconds: 5, isRunning: false });
+    this.setState({
+      remainingSeconds: 5, // temporary
+      isRunning: false,
+    });
   };
 
   renderPickers = () => (
     <View style={styles.pickerContainer}>
       <Picker
         style={styles.picker}
-        itemStyle={styles.itemPicker}
+        itemStyle={styles.pickerItem}
         selectedValue={this.state.selectedMinutes}
-        onValueChange={value => {this.setState({selectedMinutes: value})}}
+        onValueChange={itemValue => {
+          this.setState({ selectedMinutes: itemValue });
+        }}
         mode="dropdown"
       >
-        {AVAILABLE_MINUTES.map((value) => {
-          <Picker.Item key={value} label={value} value={value} />;
-        })}
+        {AVAILABLE_MINUTES.map(value => (
+          <Picker.Item key={value} label={value} value={value} />
+        ))}
       </Picker>
-      <Text style={styles.itemStyle}>minutes</Text>
+      <Text style={styles.pickerItem}>minutes</Text>
       <Picker
         style={styles.picker}
-        itemStyle={styles.itemPicker}
+        itemStyle={styles.pickerItem}
         selectedValue={this.state.selectedSeconds}
-        onValueChange={value => {this.setState({selectedSeconds: value})}}
+        onValueChange={itemValue => {
+          this.setState({ selectedSeconds: itemValue });
+        }}
         mode="dropdown"
       >
-        {AVAILABLE_SECONDS.map((value) => {
-          <Picker.Item key={value} label={value} value={value} />;
-        })}
+        {AVAILABLE_SECONDS.map(value => (
+          <Picker.Item key={value} label={value} value={value} />
+        ))}
       </Picker>
-      <Text style={styles.itemStyle}>seconds</Text>
+      <Text style={styles.pickerItem}>seconds</Text>
     </View>
   );
 
   render() {
-    const { minutes, seconds } = getRemaining(this.state.remaininSeconds);
+    const { minutes, seconds } = getRemaining(this.state.remainingSeconds);
+
     return (
       <View style={styles.container}>
         <StatusBar barStyle="light-content" />
